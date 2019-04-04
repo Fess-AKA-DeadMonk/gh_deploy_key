@@ -52,7 +52,7 @@ cur_dir=$(pwd)
 repo_name=${cur_dir##*/}
 
 
-key_name="$(whoami)@$(hostname) $(date '+%Y-%M-%d')"
+key_name="$(whoami)@$(hostname) $(date '+%Y-%m-%d')"
 
 # generate ssh key for github authorization
 # 1026  ssh-keygen
@@ -109,7 +109,7 @@ git remote add github git@${repo_name}.github.com:${USER}/${repo_name}.git
 # 1032  mcedit ~/.ssh/config
 cat << EOF >> ~/.ssh/config
 
-# `date`
+# $(date '+%Y-%m-%d')
 host ${repo_name}.github.com
  HostName github.com
  IdentityFile ~/.ssh/${ssh_key}
