@@ -44,11 +44,10 @@ if [[ ! -d ~/.ssh ]]; then
 fi
 
 # create repo and add key into it
-# 1027  cat gh_python3_pg.pub
-# 1028  mv gh* ~/.ssh/
-
+# create repo
+# https://developer.github.com/v3/repos/#create
 post_file=`mktemp`
-cat << POST >> $post_file
+cat << POST > $post_file
 {
   "name": "$repo_name",
   "description": "This is repository",
@@ -60,17 +59,25 @@ curl -X POST --data-binary "@$post_file" --include \
   -H "Accept: application/json" -H "Content-Type: application/json; charset=UTF-8" \
   -H "Authorization: token $TOKEN" \
      "https://api.github.com/user/repos"
+
+# deploy key
+# https://developer.github.com/v3/repos/keys/#add-a-new-deploy-key
+pub_key_contents="$(cat "$ssh_key.pub")"
+cat << POST > $post_file
+{
+  "title": "$key_name",
+  "key": "$pub_key_contents"
+}
+POST
+
+curl -X POST --data-binary "@$post_file" --include \
+  -H "Accept: application/json" -H "Content-Type: application/json; charset=UTF-8" \
+  -H "Authorization: token $TOKEN" \
+     "https://api.github.com/repos/$USER/$repo_name/keys"
+
 rm $post_file
 
 # ssh_key:             ${ssh_key}.pub
-ansible-playbook init.yml -e "
-  ssh_key_file:       1234123412341234sdfsadf
-  repo:
-    owner:             $USER
-    name:              $repo_name
-    key_name:          '$key_name'
-    token:             $TOKEN
-"
 mv "$ssh_key"* ~/.ssh/
 
 # add origin
@@ -81,6 +88,8 @@ git remote add github git@${repo_name}.github.com:${USER}/${repo_name}.git
 # add subdomain section to the ssh config
 # 1032  mcedit ~/.ssh/config
 cat << EOF >> ~/.ssh/config
+
+# `date`
 host ${repo_name}.github.com
  HostName github.com
  IdentityFile ~/.ssh/${ssh_key}
