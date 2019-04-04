@@ -2,31 +2,51 @@
 # alternative solution https://stackoverflow.com/a/38474137
 
 # usage
-HELP='github.sh [-f /path/to/setts] [-t token] [-h]
-you should have settings file github-init.ini in your home directory or
-provide path to it if it resides elsewhere. this file should contain user and
+HELP='github.sh [-f /path/to/setts] [-t token] [-hp]
+Creates git repo in current directory and corresponding repo on github.
+Then generates ssh key pair for it and adds public key as a deploy key for
+resulting github repo. Git remote github is added.
+Use `git push -u github master` after adding some commits
+Ssh keys are added to your ~/.ssh/ directory and a github subdomain record is
+added into ssh config for this repository.
+You should have settings file github-init.ini in your home directory or
+provide path to it if it resides elsewhere. This file should contain user and
 API token for your github account in the shell format like this:
 
 USER="Fess-AKA-DeadMonk"
 TOKEN="asdasd234234"
 
-requires ansible, git, ssh-keygen in order to work
+API key should have permissions:
+  admin:public_key, read:user, repo
+Requires git (obviously), ssh-keygen and curl in order to work
+
+-f path/to/settings file described above
+-t use to provide token directly
+-h print this help
+-p create public repo. repo is created private by default
 '
 
 GITHUB_SETTS=~/.github-init.ini
+. "$GITHUB_SETTS"
 PRIVATE=true
 
 while getopts f:t:hp option; do
   case "${option}"
   in
-    f) GITHUB_SETTS=${OPTARG};;
     t) TOKEN=${OPTARG};;
     p) PRIVATE=false;;
-    h) echo "$HELP"; exit;;
+    f)
+      GITHUB_SETTS=${OPTARG}
+      . "$GITHUB_SETTS"
+    ;;
+    h)
+      echo "$HELP"
+      exit
+    ;;
   esac
 done
 
-. "$GITHUB_SETTS"
+# TODO: add some checks!!!
 
 cur_dir=$(pwd)
 repo_name=${cur_dir##*/}
